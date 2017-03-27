@@ -1,6 +1,8 @@
 package com.example.terz99.quakereport;
 
+import android.app.LoaderManager;
 import android.content.Intent;
+import android.content.Loader;
 import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -8,6 +10,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -16,13 +20,25 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<ArrayList<Earthquake>>{
+
+    // Empty view display/view
+    private TextView mEmptyView;
+
+    // Spinning loading progress bar
+    private ProgressBar mProgressBar;
+
+    // Loader ID
+    private final static int EARTHQUAKE_LOADER_ID = 0;
 
     // Adapter to help display the list of earthquakes
     private EarthquakeAdapter mAdapter;
 
     // Log tag
     private final static String LOG_TAG = MainActivity.class.getSimpleName();
+
+    // URL from where to fetch data
+    private final static String URL = "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&eventtype=earthquake&orderby=time&minmag=4.5&limit=80";
 
     // Fake JSON response data String
     private final static String JSON_RESPONSE_SAMPLE = "{\"type\":\"FeatureCollection\",\"metadata\":{\"generated\":1462295443000,\"url\":\"http://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=2016-01-01&endtime=2016-01-31&minmag=6&limit=10\",\"title\":\"USGS Earthquakes\",\"status\":200,\"api\":\"1.5.2\",\"limit\":10,\"offset\":1,\"count\":10},\"features\":[{\"type\":\"Feature\",\"properties\":{\"mag\":7.2,\"place\":\"88km N of Yelizovo, Russia\",\"time\":1454124312220,\"updated\":1460674294040,\"tz\":720,\"url\":\"http://earthquake.usgs.gov/earthquakes/eventpage/us20004vvx\",\"detail\":\"http://earthquake.usgs.gov/fdsnws/event/1/query?eventid=us20004vvx&format=geojson\",\"felt\":2,\"cdi\":3.4,\"mmi\":5.82,\"alert\":\"green\",\"status\":\"reviewed\",\"tsunami\":1,\"sig\":798,\"net\":\"us\",\"code\":\"20004vvx\",\"ids\":\",at00o1qxho,pt16030050,us20004vvx,gcmt20160130032510,\",\"sources\":\",at,pt,us,gcmt,\",\"types\":\",cap,dyfi,finite-fault,general-link,general-text,geoserve,impact-link,impact-text,losspager,moment-tensor,nearby-cities,origin,phase-data,shakemap,tectonic-summary,\",\"nst\":null,\"dmin\":0.958,\"rms\":1.19,\"gap\":17,\"magType\":\"mww\",\"type\":\"earthquake\",\"title\":\"M 7.2 - 88km N of Yelizovo, Russia\"},\"geometry\":{\"type\":\"Point\",\"coordinates\":[158.5463,53.9776,177]},\"id\":\"us20004vvx\"},\n" +
@@ -41,22 +57,21 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Get link from the progress bar
+        mProgressBar = (ProgressBar) findViewById(R.id.spinning_loading_progress_bar);
+
         // Get link from the list view layout
         ListView earthquakeListView = (ListView) findViewById(R.id.earthquake_list_view);
 
-        // Try to grab data from the JSON response sample
-        ArrayList<Earthquake> earthquakeList = null;
-        try {
-            earthquakeList = extractEarthquakesFromJSON(JSON_RESPONSE_SAMPLE);
-        } catch (JSONException e) {
-            Log.e(LOG_TAG, "Error parsing the JSON sample", e);
-        }
-
         // Create a new adapter
-        mAdapter = new EarthquakeAdapter(this, earthquakeList);
+        mAdapter = new EarthquakeAdapter(this, new ArrayList<Earthquake>());
 
         // Attach the adapter to the list view
         earthquakeListView.setAdapter(mAdapter);
+
+        // Get link from the empty view and set it to the list view as an empty view
+        mEmptyView = (TextView) findViewById(R.id.blank_page_text_view);
+        earthquakeListView.setEmptyView(mEmptyView);
 
 
         /**
@@ -77,41 +92,55 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+
+        LoaderManager loaderManager = getLoaderManager();
+        loaderManager.initLoader(EARTHQUAKE_LOADER_ID, null, this);
+    }
+
+
+
+    /**
+     * This method is created when the loader is created/initiated
+     * @param id
+     * @param args
+     * @return an earthquake data loader
+     */
+    @Override
+    public Loader<ArrayList<Earthquake>> onCreateLoader(int id, Bundle args) {
+        return new EarthquakeLoader(this, URL);
     }
 
 
     /**
-     * This method extracts data from a JSON response sample
-     * @param jsonResponseSample is a String object which is the JSON response sample
-     * @return list of earthquakes
-     * @throws JSONException
+     * This method is called when the loading of the data finishes
+     * @param loader
+     * @param earthquakes is a list of earthquakes which need to be displayed
      */
-    private ArrayList<Earthquake> extractEarthquakesFromJSON(String jsonResponseSample) throws JSONException {
+    @Override
+    public void onLoadFinished(Loader<ArrayList<Earthquake>> loader, ArrayList<Earthquake> earthquakes) {
 
-        JSONObject root = new JSONObject(jsonResponseSample);
+        // Set the empty view text here to avoid sudden appearance of the empty view
+        mEmptyView.setText(R.string.no_earthquakes);
 
-        JSONArray features = root.getJSONArray("features");
+        // Erase the spinning loading progress bar
+        mProgressBar.setVisibility(View.GONE);
 
-        ArrayList<Earthquake> earthquakes = new ArrayList<Earthquake>();
-        for(int i = 0; i < features.length(); i++){
+        // Clear the adapter from previous data
+        mAdapter.clear();
 
-            JSONObject featuresObject = features.getJSONObject(i);
-            JSONObject properties = featuresObject.getJSONObject("properties");
-
-            // Extract the magnitude
-            double magnitude = properties.getDouble("mag");
-            // Extract the time
-            long time = properties.getLong("time");
-            // Extract the location
-            String location = properties.getString("place");
-            // Extract the url
-            String url = properties.getString("url");
-
-            // Add a new earthquake object into the list
-            earthquakes.add(new Earthquake(magnitude, time, location, url));
+        // See if the earthquake list is not null and it is not empty
+        if(earthquakes != null && earthquakes.isEmpty() == false){
+            mAdapter.addAll(earthquakes);
         }
+    }
 
-        // Return the list
-        return earthquakes;
+
+    /**
+     * This method is called when the loader is destroyed
+     * @param loader
+     */
+    @Override
+    public void onLoaderReset(Loader<ArrayList<Earthquake>> loader) {
+        mAdapter.clear();
     }
 }

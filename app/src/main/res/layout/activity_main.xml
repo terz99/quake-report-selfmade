@@ -1,12 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ListView xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:id="@+id/earthquake_list_view"
-    android:dividerHeight="0dp"
-    android:divider="@null"
     tools:context="com.example.terz99.quakereport.MainActivity">
 
-</ListView>
+    <ListView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/earthquake_list_view"
+        android:dividerHeight="0dp"
+        android:divider="@null"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/blank_page_text_view"
+        android:layout_centerInParent="true"
+        android:textSize="@dimen/small_letters"
+        tools:text="@string/no_earthquakes"/>
+
+    <ProgressBar
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/spinning_loading_progress_bar"
+        android:layout_centerInParent="true"/>
+
+</RelativeLayout>
