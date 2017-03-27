@@ -3,6 +3,8 @@ package com.example.terz99.quakereport;
 import android.app.LoaderManager;
 import android.content.Intent;
 import android.content.Loader;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -93,10 +95,30 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             }
         });
 
-        LoaderManager loaderManager = getLoaderManager();
-        loaderManager.initLoader(EARTHQUAKE_LOADER_ID, null, this);
+        // Check if there is internet connection
+        boolean isConnected = checkInternetConnection();
+
+
+        if(isConnected){
+            // If there is internet connection then the loader can be initiated
+            LoaderManager loaderManager = getLoaderManager();
+            loaderManager.initLoader(EARTHQUAKE_LOADER_ID, null, this);
+        } else {
+            // Otherwise, set empty view message
+            mProgressBar.setVisibility(View.GONE);
+            mEmptyView.setText(R.string.no_internet_connection);
+        }
     }
 
+    private boolean checkInternetConnection() {
+
+        ConnectivityManager connectivityManager = (ConnectivityManager)
+                getSystemService(CONNECTIVITY_SERVICE);
+
+        NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
+
+        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+    }
 
 
     /**
