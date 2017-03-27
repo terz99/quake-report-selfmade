@@ -8,11 +8,13 @@
     android:paddingRight="16dp">
 
     <TextView
-        android:textSize="@dimen/big_letters"
+        android:background="@drawable/magnitude_circle"
+        android:textSize="@dimen/medium_letters"
         android:layout_width="36dp"
         android:layout_height="36dp"
         android:id="@+id/magnitude"
         android:fontFamily="sans-serif"
+        android:textColor="@android:color/white"
         tools:text="9.0"
         android:layout_gravity="center_vertical"
         android:gravity="center"/>

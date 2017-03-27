@@ -1,8 +1,10 @@
 package com.example.terz99.quakereport;
 
 import android.content.Context;
+import android.graphics.drawable.GradientDrawable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,6 +23,8 @@ import java.util.Date;
 
 class EarthquakeAdapter extends ArrayAdapter<Earthquake>{
 
+    // Context object instance to store the Activity/Fragment where the call comes from
+    private Context mContext;
     // Location separator
     private static final String LOCATION_SEPARATOR = " of ";
     // Log tag
@@ -34,6 +38,7 @@ class EarthquakeAdapter extends ArrayAdapter<Earthquake>{
      */
     public EarthquakeAdapter(Context context, ArrayList<Earthquake> earthquakes){
         super(context, 0, earthquakes);
+        mContext = context;
     }
 
 
@@ -46,13 +51,18 @@ class EarthquakeAdapter extends ArrayAdapter<Earthquake>{
             listItemView = LayoutInflater.from(getContext()).inflate(R.layout.list_item, parent, false);
         }
 
+
         // Get the current earthquake object
         Earthquake currentEarthquake = getItem(position);
+
+
 
         // Get link from the magnitude textview
         TextView magnitudeTextView = (TextView) listItemView.findViewById(R.id.magnitude);
         // Set magnitude to the current earthquake's magnitude value
         magnitudeTextView.setText(String.valueOf(currentEarthquake.getmMagnitude()));
+
+
 
         // Split the location into two parts
         // Example: "90km S of Skopje, Macedonia" -> "90km S of" and "Skopje, Macedonia"
@@ -73,6 +83,8 @@ class EarthquakeAdapter extends ArrayAdapter<Earthquake>{
         // Set the offset location text view to current earthquake's offset location
         primaryLocationTextView.setText(primaryLocation);
 
+
+
         // Get the time of the earthquake
         Date date = new Date(currentEarthquake.getmTimeInMilliseconds());
         // Format the date into this format: Jan 10, 1999
@@ -88,9 +100,46 @@ class EarthquakeAdapter extends ArrayAdapter<Earthquake>{
         // Set the time
         timeTextView.setText(formattedTime);
 
+
+
+        // Get link from the magntiude background
+        GradientDrawable magnitudeCircle = (GradientDrawable) magnitudeTextView.getBackground();
+        // Set the color according to the magnitude value
+        magnitudeCircle.setColor(getColor(currentEarthquake.getmMagnitude()));
+
         return listItemView;
     }
 
+
+    /**
+     * This method returns a color according to the value of the magnitude
+     * @param magnitude is the magnitude of the color
+     * @return int ID for the corresponding color
+     */
+    private int getColor(double magnitude) {
+
+        if(magnitude <= 2.0){
+            return ContextCompat.getColor(getContext(), R.color.magnitude1);
+        } else if(magnitude <= 3.0){
+            return ContextCompat.getColor(getContext(), R.color.magnitude2);
+        } else if(magnitude <= 4.0){
+            return ContextCompat.getColor(getContext(), R.color.magnitude3);
+        } else if(magnitude <= 5.0){
+            return ContextCompat.getColor(getContext(), R.color.magnitude4);
+        } else if(magnitude <= 6.0){
+            return ContextCompat.getColor(getContext(), R.color.magnitude5);
+        } else if(magnitude <= 7.0){
+            return ContextCompat.getColor(getContext(), R.color.magnitude6);
+        } else if(magnitude <= 8.0){
+            return ContextCompat.getColor(getContext(), R.color.magnitude7);
+        } else if(magnitude <= 9.0){
+            return ContextCompat.getColor(getContext(), R.color.magnitude8);
+        } else if(magnitude <= 10.0){
+            return ContextCompat.getColor(getContext(), R.color.magnitude9);
+        } else {
+            return ContextCompat.getColor(getContext(), R.color.magnitude10plus);
+        }
+    }
 
 
     /**
