@@ -1,8 +1,12 @@
 package com.example.terz99.quakereport;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 
 import org.json.JSONArray;
@@ -13,6 +17,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
+
+    // Adapter to help display the list of earthquakes
+    private EarthquakeAdapter mAdapter;
 
     // Log tag
     private final static String LOG_TAG = MainActivity.class.getSimpleName();
@@ -46,10 +53,30 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // Create a new adapter
-        EarthquakeAdapter adapter = new EarthquakeAdapter(this, earthquakeList);
+        mAdapter = new EarthquakeAdapter(this, earthquakeList);
 
         // Attach the adapter to the list view
-        earthquakeListView.setAdapter(adapter);
+        earthquakeListView.setAdapter(mAdapter);
+
+
+        /**
+         * Item click listener to open the website of the clicked earthquake to display more data
+         */
+        earthquakeListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+                // The earthquake which is clicked
+                Earthquake currentEarthquake = mAdapter.getItem(position);
+
+                // Start new implicit intent to open the clicked earthquake's url
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setData(Uri.parse(currentEarthquake.getmUrl()));
+                // Open the browser
+                startActivity(intent);
+            }
+        });
     }
 
 
